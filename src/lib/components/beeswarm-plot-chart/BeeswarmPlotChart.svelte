@@ -1,6 +1,6 @@
 <script>
 	// @ts-nocheck
-
+	import { fade } from 'svelte/transition';
 	import { forceSimulation, forceX, forceY, forceCollide } from 'd3-force';
 	import { scaleLinear, scaleBand, scaleOrdinal, scaleSqrt } from 'd3-scale';
 	import { mean, rollups } from 'd3-array';
@@ -26,7 +26,7 @@
 			.force(
 				'y',
 				forceY()
-					.y((d) => yScale(d.continent))
+					.y((d) => (groupByContinent ? yScale(d.continent) : innerHeight / 2))
 					.strength(0.2)
 			)
 			.force(
@@ -82,31 +82,63 @@
 		.range([3, 8]); //Output
 
 	let hovered;
+	let hoveredContinent;
+
+	let groupByContinent = false;
 </script>
 
 <h2 class="chart-title">The Happiest Countries in the World</h2>
-<Legend {colorScale} />
-<div class="chart-container" bind:clientWidth={width}>
-	<svg {width} {height}>
+<Legend {colorScale} bind:hoveredContinent />
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div
+	class="chart-container"
+	bind:clientWidth={width}
+	on:click={() => {
+		groupByContinent = !groupByContinent;
+		hovered = null;
+	}}
+>
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<svg
+		{width}
+		{height}
+		on:mouseleave={() => {
+			hovered = null;
+		}}
+	>
 		<AxisX {xScale} width={innerWidth} height={innerHeight} />
-		<AxisY {yScale} />
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<g
-			class="inner-chart"
-			transform={`translate(${margin.left}, ${margin.top})`}
-			on:mouseleave={() => {
-				hovered = null;
-			}}
-		>
-			{#each nodes as node}
+		<AxisY {yScale} {groupByContinent} />
+		{#if hovered}
+			<line
+				transition:fade
+				x1={hovered.x}
+				x2={hovered.x}
+				y1={innerHeight}
+				y2={hovered.y}
+				stroke={colorScale(hovered.continent)}
+				stroke-width={2}
+			/>
+		{/if}
+		<g class="inner-chart" transform={`translate(${margin.left}, ${margin.top})`}>
+			{#each nodes as node, index}
 				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<circle
+					in:fade={{ delay: 400 + index * 10 }}
 					cx={node.x}
 					cy={node.y}
 					r={radiusScale(node.happiness)}
 					fill={colorScale(node.continent)}
-					stroke="black"
+					stroke={hovered || hoveredContinent
+						? hovered === node || hoveredContinent === node.continent
+							? 'black'
+							: 'transparent'
+						: '#00000060'}
+					opacity={hovered || hoveredContinent
+						? hovered === node || hoveredContinent === node.continent
+							? 1
+							: 0.5
+						: 1}
 					on:mouseover={() => {
 						hovered = node;
 					}}
@@ -114,12 +146,15 @@
 						hovered = node;
 					}}
 					tabindex="0"
+					on:click={(e) => {
+						e.stopPropagation();
+					}}
 				/>
 			{/each}
 		</g>
 	</svg>
 	{#if hovered}
-		<Tooltip data={hovered} />
+		<Tooltip data={hovered} {colorScale} {width} />
 	{/if}
 </div>
 
@@ -135,5 +170,12 @@
 		font-weight: 600;
 		margin-bottom: 0.5rem;
 		text-align: center;
+	}
+
+	circle {
+		transition:
+			stroke 500ms ease,
+			opacity 500ms ease;
+		cursor: pointer;
 	}
 </style>

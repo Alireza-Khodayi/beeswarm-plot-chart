@@ -1,11 +1,32 @@
-<script>
+<script lang="ts">
 	export let colorScale;
+	export let hoveredContinent: any;
+
 	const ticks = colorScale.domain();
 </script>
 
-<div class="legend">
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div
+	class="legend"
+	on:mouseleave={() => {
+		hoveredContinent = null;
+	}}
+	on:blur={() => {
+		hoveredContinent = null;
+	}}
+>
 	{#each ticks as continent}
-		<p><span style="background-color: {colorScale(continent)};"></span>{continent}</p>
+		<p
+			on:mouseover={() => {
+				hoveredContinent = continent;
+			}}
+			on:focus={() => {
+				hoveredContinent = continent;
+			}}
+			class:unhovered={hoveredContinent && hoveredContinent !== continent}
+		>
+			<span style="background-color: {colorScale(continent)};"></span>{continent}
+		</p>
 	{/each}
 </div>
 
@@ -22,6 +43,8 @@
 		font-size: 0.8rem;
 		display: flex;
 		align-items: center;
+		cursor: pointer;
+		transition: opacity 300ms ease;
 	}
 	span {
 		width: 10px;
@@ -30,5 +53,8 @@
 		border-radius: 50%;
 		margin: 0 3px;
 		border: 1px solid rgba(0, 0, 0, 0.5);
+	}
+	.unhovered {
+		opacity: 0.4;
 	}
 </style>
