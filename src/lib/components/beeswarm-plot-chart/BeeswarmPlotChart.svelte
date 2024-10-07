@@ -124,7 +124,7 @@
 			{#each nodes as node, index}
 				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 				<circle
-					in:fade={{ delay: 400 + index * 10 }}
+					in:fade={{ delay: 500 + index * 10 }}
 					cx={node.x}
 					cy={node.y}
 					r={radiusScale(node.happiness)}

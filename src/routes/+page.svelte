@@ -3,4 +3,16 @@
 	import BeeswarmPlotChart from '$lib/components/beeswarm-plot-chart/BeeswarmPlotChart.svelte';
 </script>
 
-<BeeswarmPlotChart {data} />
+<svelte:head>
+	<title>The Happiest Countries in the World</title>
+</svelte:head>
+
+<div class="container">
+	<BeeswarmPlotChart {data} />
+</div>
+
+<style>
+	.container {
+		padding: 5px 10px;
+	}
+</style>
